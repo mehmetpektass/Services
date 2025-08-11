@@ -1,10 +1,12 @@
 import express, { json } from "express";
 import dotenv from "dotenv";
-import {} from "./Controller/emailController.js"
+import nodemailer from "nodemailer";
+import { } from "./Controller/emailController.js";
 
 dotenv.config();
 
 const app = express();
+const port = process.env.PORT || 4000;
 
 app.use(express.json());
 
@@ -33,10 +35,10 @@ app.get("/", (req, res) => {
 })
 
 
-app.post("/send", )
+app.post("/send",)
 
 
-app.use("*" , (req, res) => {
+app.use("*", (req, res) => {
     res.status(404).json({
         success: false,
         message: "Invalid endpoint. Check the main (/) page.",
@@ -49,4 +51,28 @@ app.use((error, req, res, next) => {
         success: false,
         message: "Server Error!",
     })
+})
+
+
+app.listen(port, async () => {
+    console.log(`\n🚀 Email Service's Started: http://localhost:${PORT}`);
+    console.log(`📧 Email: ${process.env.FROM_SENDER}`);
+
+    try {
+        const transporter = nodemailer.createTransport({
+            host: process.env.EMAIL_HOST,
+            port: process.env.EMAIL_PORT,
+            secure: false,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        })
+
+        await transporter.verify();
+        console.log("Email Connection Completed")
+
+    } catch (error) {
+        console.log("Email Connection Error", error.message)
+    }
 })
