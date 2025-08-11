@@ -1,7 +1,7 @@
 import express, { json } from "express";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
-import sendEmail  from "./Controller/emailController.js";
+import {sendEmail, sendTemplateEmail}  from "./Controller/emailController.js";
 
 dotenv.config();
 

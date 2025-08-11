@@ -13,7 +13,7 @@ const emailTrasporter = () => {
     })
 }
 
-async function sendEmail(req, res) {
+export async function sendEmail(req, res) {
     try {
         const { to, subject, text, html } = req.body;
 
@@ -51,4 +51,12 @@ async function sendEmail(req, res) {
     }
 }
 
-export default sendEmail;
+export async function sendTemplateEmail(req,res) {
+    try {
+        const { to, templateData} = req.body;
+        
+
+    } catch (error) {
+        
+    }
+}
