@@ -1,7 +1,7 @@
 import express, { json } from "express";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
-import { } from "./Controller/emailController.js";
+import sendEmail  from "./Controller/emailController.js";
 
 dotenv.config();
 
@@ -35,10 +35,10 @@ app.get("/", (req, res) => {
 })
 
 
-app.post("/send",)
+app.post("/send", sendEmail)
 
 
-app.use("*", (req, res) => {
+app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: "Invalid endpoint. Check the main (/) page.",
@@ -55,7 +55,7 @@ app.use((error, req, res, next) => {
 
 
 app.listen(port, async () => {
-    console.log(`\n🚀 Email Service's Started: http://localhost:${PORT}`);
+    console.log(`\n🚀 Email Service's Started: http://localhost:${port}`);
     console.log(`📧 Email: ${process.env.FROM_SENDER}`);
 
     try {
