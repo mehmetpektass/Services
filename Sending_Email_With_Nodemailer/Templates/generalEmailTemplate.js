@@ -1,5 +1,5 @@
 // Genel email template
-function createEmailTemplate(data) {
+ export function createEmailTemplate(data) {
     // Email tipini otomatik belirle
     const isQuestion = data.message && (
       data.message.includes('?') || 
@@ -37,7 +37,7 @@ function createEmailTemplate(data) {
         <div style="padding: 30px 20px;">
           <!-- Greeting -->
           <h2 style="color: #333; margin: 0 0 15px 0; font-size: 18px;">
-            ${data.greeting || `Merhaba ${data.recipientName || 'Değerli İlgili'},`}
+            ${`Merhaba ${data.recipientName || 'Değerli İlgili'},`}
           </h2>
   
           <!-- Main Message -->
@@ -118,5 +118,3 @@ function createEmailTemplate(data) {
       text: text
     };
   }
-  
-  module.exports = { createEmailTemplate };

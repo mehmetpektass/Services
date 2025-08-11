@@ -35,7 +35,8 @@ app.get("/", (req, res) => {
 })
 
 
-app.post("/send", sendEmail)
+app.post("/send", sendEmail);
+app.post("/send-template", sendTemplateEmail);
 
 
 app.use((req, res) => {
