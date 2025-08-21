@@ -84,6 +84,11 @@ Comprehensive metadata including:
 | 3 | segment_003.wav | 8.2 | 12.1 | 3.9 | I'm fine thanks | ./segment_003.wav |
 
 <br>
+
+### Also you can find this code on Google Collab
+https://colab.research.google.com/drive/1LRhtif2Cqt3O_g0XqFOuGCfXXzXwVkoR#scrollTo=kH6Pugre7Glf
+
+<br>
 <br>
 
 ## Contribution Guidelines  🚀
@@ -92,4 +97,5 @@ Comprehensive metadata including:
 * Fork the repository.
 * Create a feature branch.
 * Submit a pull request with a clear description of changes.
+
 
