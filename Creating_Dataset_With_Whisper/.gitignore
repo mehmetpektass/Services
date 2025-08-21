@@ -2,3 +2,4 @@ Whisper_Dataset_Project/
 .DS_Store
 .env
 chunks/
+output_segments/
