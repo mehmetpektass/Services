@@ -45,6 +45,7 @@ cd Creating_Dataset_With_Whisper
 ```
 pip install -r requirements.txt
 ```
+<br>
 
 ## 🔧 Additional System Requirements:
 #### FFmpeg (must be installed separately):
@@ -52,6 +53,37 @@ pip install -r requirements.txt
 - Windows: Download from https://ffmpeg.org/
 - macOS: ``` brew install ffmpeg ```
 - Linux: ``` sudo apt-get install ffmpeg ```
+
+<br>
+
+# 📊 Output
+
+## 🎵 Audio Segments
+- Individual WAV files for each transcribed segment
+- Precisely trimmed based on Whisper timestamps
+- Optimized for speech processing (16kHz, mono)
+
+## 📋 Dataset CSV
+Comprehensive metadata including:
+
+| Column | Description | Format |
+|--------|-------------|---------|
+| `id` | Segment identifier | Integer |
+| `filename` | Audio file name | String |
+| `start` | Start timestamp (seconds) | Float |
+| `end` | End timestamp (seconds) | Float |
+| `duration` | Segment duration (seconds) | Float |
+| `text` | Transcribed content | String |
+| `file_path` | Relative path to audio file | String |
+
+## 📄 Sample CSV Data:
+| id | filename | start | end | duration | text | file_path |
+|----|----------|-------|-----|----------|------|-----------|
+| 1 | segment_001.wav | 0.0 | 4.5 | 4.5 | Hello world | ./segment_001.wav |
+| 2 | segment_002.wav | 4.5 | 8.2 | 3.7 | How are you? | ./segment_002.wav |
+| 3 | segment_003.wav | 8.2 | 12.1 | 3.9 | I'm fine thanks | ./segment_003.wav |
+
+<br>
 
 ## Contribution Guidelines  🚀
  Pull requests are welcome. If you'd like to contribute, please:
