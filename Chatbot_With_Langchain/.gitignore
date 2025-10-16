@@ -1,0 +1,7 @@
+env_chatbot_service/
+.env
+.DS_Store
+data/Book_1.pdf
+data/Book_2.pdf
+data/Book_3.pdf
+data/Book_4.pdf
