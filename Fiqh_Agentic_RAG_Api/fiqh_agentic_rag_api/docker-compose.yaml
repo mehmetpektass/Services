@@ -1,0 +1,18 @@
+services:
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: fiqh_qdrant_db
+    restart: always
+    ports:
+      - "6333:6333" # API Portu
+      - "6334:6334" # İletişim Portu
+    volumes:
+      # Verilerin kaybolmaması için bilgisayarındaki bir klasöre bağlıyoruz
+      - ./qdrant_storage:/qdrant/storage
+    environment:
+      # Güvenlik için şimdilik API KEY kapalı, sunucuya geçerken açarız
+      - QDRANT__SERVICE__API_KEY=
+      
+  # İleride buraya senin Python uygulaman (api) da eklenecek.
+  # Şimdilik geliştirme yaparken kapalı tutuyoruz.
