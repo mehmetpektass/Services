@@ -5,7 +5,11 @@ description = "fiqh_agentic_rag_api using crewAI"
 authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
 dependencies = [
-    "crewai[tools]>=0.175.0,<1.0.0"
+    "crewai[tools]>=0.175.0,<1.0.0",
+    "llama-index>=0.14.10",
+    "llama-index-embeddings-huggingface>=0.6.1",
+    "llama-index-vector-stores-qdrant>=0.9.0",
+    "qdrant-client>=1.16.2",
 ]
 
 [project.scripts]
