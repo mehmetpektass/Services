@@ -1,17 +1,36 @@
-research_task:
+search_task:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
+    User's Question: "{question}"
+    
+    1. Analyze the user's question. If it is not in Turkish, mentally translate the core intent to Turkish.
+    2. Use the 'Fiqh_DB_Search_Tool' to scan the database using Turkish keywords.
+    3. Retrieve 3 to 5 most relevant raw text chunks.
+    4. List the raw Turkish texts and their sources (Book name, page number, etc.).
   expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+    A list of raw Turkish texts and sources retrieved from the database.
+  agent: db_researcher
 
-reporting_task:
+writing_task:
   description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    Using the raw texts provided by the 'db_researcher', construct an answer for: "{question}".
+    
+    1. Introduction: Briefly restate the question and the Islamic perspective.
+    2. Evidences (Deliller): Explain the topic using the retrieved verses/hadiths. Translate them to the target language if necessary.
+    3. Conclusion (Hüküm): Provide a clear and concise answer.
+    4. Tone: Polite, inclusive, and scholarly.
+    
+    REMINDER: The output MUST be in the same language as "{question}".
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+    A structured draft answer (Introduction-Body-Conclusion) in the user's target language, including citations.
+  agent: fiqh_writer
+
+review_task:
+  description: >
+    Review the draft created by 'fiqh_writer'.
+    
+    1. Source Verification: Do the cited evidences really exist in the Researcher's findings? Remove any hallucinations.
+    2. Tone Check: Is the language polite and compliant with Islamic etiquette?
+    3. Language Check: Is the final answer in the correct language matching "{question}"?
+  expected_output: >
+    The final, polished, and error-free answer ready to be presented to the user.
+  agent: content_reviewer
