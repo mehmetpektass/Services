@@ -28,7 +28,7 @@ class FiqhSearchTool(BaseTool):
             search_results = client.query_points(
                 collection_name="fiqh_knowladge_base",
                 query=query_vector,
-                limit=5,
+                limit=3,
                 with_payload=True,
             )
 

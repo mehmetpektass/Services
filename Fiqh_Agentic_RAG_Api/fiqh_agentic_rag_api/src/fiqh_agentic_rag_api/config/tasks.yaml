@@ -1,36 +1,33 @@
 search_task:
   description: >
-    User's Question: "{question}"
+    Current Question: "{question}"
     
-    1. Analyze the user's question. If it is not in Turkish, mentally translate the core intent to Turkish.
-    2. Use the 'Fiqh_DB_Search_Tool' to scan the database using Turkish keywords.
-    3. Retrieve 3 to 5 most relevant raw text chunks.
-    4. List the raw Turkish texts and their sources (Book name, page number, etc.).
+    1. Analyze the current question in the context of the conversation history.
+    2. Identify the core intent (resolve pronouns like "it", "he", "that" using history).
+    3. Search the database for the top 3 most relevant short texts.
   expected_output: >
-    A list of raw Turkish texts and sources retrieved from the database.
+    A list of relevant raw texts with their sources.
   agent: db_researcher
 
 writing_task:
   description: >
-    Using the raw texts provided by the 'db_researcher', construct an answer for: "{question}".
+    Using the research findings, formulate a response to "{question}".
     
-    1. Introduction: Briefly restate the question and the Islamic perspective.
-    2. Evidences (Deliller): Explain the topic using the retrieved verses/hadiths. Translate them to the target language if necessary.
-    3. Conclusion (Hüküm): Provide a clear and concise answer.
-    4. Tone: Polite, inclusive, and scholarly.
-    
-    REMINDER: The output MUST be in the same language as "{question}".
+    GUIDELINES:
+    - Keep it under 150 words.
+    - Be direct and concise.
+    - If the user is greeting, greet back shortly.
+    - If the user asks a question, answer it immediately.
+    - Do not use complex headers or academic formatting.
   expected_output: >
-    A structured draft answer (Introduction-Body-Conclusion) in the user's target language, including citations.
+    A short, conversational, and accurate text response.
   agent: fiqh_writer
 
 review_task:
   description: >
-    Review the draft created by 'fiqh_writer'.
-    
-    1. Source Verification: Do the cited evidences really exist in the Researcher's findings? Remove any hallucinations.
-    2. Tone Check: Is the language polite and compliant with Islamic etiquette?
-    3. Language Check: Is the final answer in the correct language matching "{question}"?
+    Review the draft response for brevity and clarity.
+    If it's too long, summarize it.
+    Ensure it flows naturally as a chat message.
   expected_output: >
-    The final, polished, and error-free answer ready to be presented to the user.
+    Final polished response ready for the user.
   agent: content_reviewer

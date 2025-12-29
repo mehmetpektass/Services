@@ -79,7 +79,7 @@ class FiqhAgenticRagApi():
 if __name__ == "__main__":
     print("Fiqh Agentic RAG Crew starting...")
     
-    inputs = {'question': ''}
+    inputs = {'question': 'Ben seferi iken bir namazı kılamadım kendi vatanıma döndüğümde seferi iken kılmam gereken rekkat sayısında mı kılarım yoksa o an kılmam gerekn rekat sayısında mı'}
 
     fiqh_crew = FiqhAgenticRagApi()
     
