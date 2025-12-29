@@ -1,58 +1,73 @@
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
-from Fiqh_Agentic_RAG_Api.fiqh_agentic_rag_api.src.fiqh_agentic_rag_api.tools.custom_tool import FiqhSearchTool
+from tools.custom_tool import FiqhSearchTool
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 @CrewBase
 class FiqhAgenticRagApi():
     """FiqhAgenticRagApi crew"""
 
-    agents: List[BaseAgent]
-    tasks: List[Task]
-
-    # Learn more about YAML configuration files here:
-    # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-    # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
+    agents_config = "config/agents.yaml"
+    tasks_config = "config/tasks.yaml"
     
-    # If you would like to add tools to your agents, you can learn more about it here:
-    # https://docs.crewai.com/concepts/agents#agent-tools
-    @agent
-    def researcher(self) -> Agent:
-        return Agent(
-            config=self.agents_config['researcher'], # type: ignore[index]
-            verbose=True
+    def __init__(self):
+        self.gemini_llm = LLM(
+            model=os.getenv("MODEL"),
+            api_key=os.getenv("GEMINI_API_KEY"),
+            temperature=0.3,
         )
 
     @agent
-    def reporting_analyst(self) -> Agent:
+    def db_researcher(self) -> Agent:
         return Agent(
-            config=self.agents_config['reporting_analyst'], # type: ignore[index]
-            verbose=True
+            config=self.agents_config['db_researcher'], # type: ignore[index]
+            tools=[FiqhSearchTool()],
+            verbose=True,
+            llm=self.gemini_llm
         )
 
-    # To learn more about structured task outputs,
-    # task dependencies, and task callbacks, check out the documentation:
-    # https://docs.crewai.com/concepts/tasks#overview-of-a-task
+    @agent
+    def fiqh_writer(self) -> Agent:
+        return Agent(
+            config=self.agents_config['fiqh_writer'], # type: ignore[index]
+            verbose=True,
+            llm=self.gemini_llm
+        )
+        
+    @agent
+    def content_reviewer(self) -> Agent:
+        return Agent(
+            config=self.agents_config['content_reviewer'], # type: ignore[index]
+            verbose=True,
+            llm=self.gemini_llm
+        )    
+
+
     @task
-    def research_task(self) -> Task:
+    def search_task(self) -> Task:
         return Task(
-            config=self.tasks_config['research_task'], # type: ignore[index]
+            config=self.tasks_config['search_task'], # type: ignore[index]
         )
 
     @task
-    def reporting_task(self) -> Task:
+    def writing_task(self) -> Task:
         return Task(
-            config=self.tasks_config['reporting_task'], # type: ignore[index]
-            output_file='report.md'
+            config=self.tasks_config['writing_task'], # type: ignore[index]
         )
+    
+    @task
+    def review_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['review_task'], # type: ignore[index]
+        )    
 
     @crew
     def crew(self) -> Crew:
-        """Creates the FiqhAgenticRagApi crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
-
         return Crew(
             agents=self.agents, # Automatically created by the @agent decorator
             tasks=self.tasks, # Automatically created by the @task decorator
@@ -60,3 +75,17 @@ class FiqhAgenticRagApi():
             verbose=True,
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
+        
+if __name__ == "__main__":
+    print("Fiqh Agentic RAG Crew starting...")
+    
+    inputs = {'question': ''}
+
+    fiqh_crew = FiqhAgenticRagApi()
+    
+    # Execute
+    result = fiqh_crew.crew().kickoff(inputs=inputs)
+    print("\n\n########################")
+    print("## Result ##")
+    print("########################\n")
+    print(result)
