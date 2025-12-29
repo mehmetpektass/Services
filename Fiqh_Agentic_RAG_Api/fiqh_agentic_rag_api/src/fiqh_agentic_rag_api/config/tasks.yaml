@@ -2,32 +2,42 @@ search_task:
   description: >
     Current Question: "{question}"
     
-    1. Analyze the current question in the context of the conversation history.
-    2. Identify the core intent (resolve pronouns like "it", "he", "that" using history).
-    3. Search the database for the top 3 most relevant short texts.
+    1. Analyze the question to identify key Islamic terms (e.g., Seferi, Kaza, Mukim).
+    2. Search the database specifically for rulings regarding that topic.
+    3. Look for phrases like "iki rekat olarak kararlaşmıştır", "kaza edilir", "seferi namazı".
+    4. Retrieve the raw Turkish text exactly as it is in the database.
   expected_output: >
-    A list of relevant raw texts with their sources.
+    A list of relevant raw text evidences from the Fiqh database.
   agent: db_researcher
 
 writing_task:
   description: >
-    Using the research findings, formulate a response to "{question}".
+    Using the retrieved texts, draft a final answer to the question: "{question}".
     
-    GUIDELINES:
-    - Keep it under 150 words.
-    - Be direct and concise.
-    - If the user is greeting, greet back shortly.
-    - If the user asks a question, answer it immediately.
-    - Do not use complex headers or academic formatting.
+    *** CRITICAL LANGUAGE RULE (Kritik Dil Kuralı) ***
+    1. **DETECT LANGUAGE:** Look at the user's question ("{question}").
+    2. **MATCH LANGUAGE:** Your answer MUST be in the SAME language.
+       - If Question is TURKISH -> Answer MUST be in TURKISH.
+       - If Question is ENGLISH -> Answer in ENGLISH.
+       - NEVER translate a Turkish question's answer into English.
+    
+    *** CONTENT INSTRUCTIONS ***
+    - If the text says a missed traveler prayer is "fixed as two rakats" (kararlaşmıştır), state clearly that this rule applies even after returning home.
+    - Do NOT say "The provided text does not contain info" if there is a general ruling available. Use logic.
+    - Keep the tone conversational, helpful, and concise (under 150 words).
   expected_output: >
-    A short, conversational, and accurate text response.
+    A final answer in the SAME LANGUAGE as the user's question (likely Turkish).
   agent: fiqh_writer
 
 review_task:
   description: >
-    Review the draft response for brevity and clarity.
-    If it's too long, summarize it.
-    Ensure it flows naturally as a chat message.
+    Review the draft answer provided by the writer.
+    
+    CHECKLIST:
+    1. **Language Check:** Is the answer in the SAME language as the question "{question}"?
+       - If the question is Turkish but the answer is English, TRANSLATE IT TO TURKISH IMMEDIATELY.
+    2. **Accuracy Check:** Does the answer correctly reflect the fiqh ruling found in the search?
+    3. **Clarity:** Is it polite and short?
   expected_output: >
-    Final polished response ready for the user.
+    Final polished response in the correct language.
   agent: content_reviewer

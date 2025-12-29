@@ -1,63 +1,84 @@
 import json
 from crewai.tools import BaseTool
-from typing import Type
-from pydantic import BaseModel, Field
+from typing import Type, Optional, Any
+from pydantic import BaseModel, Field, PrivateAttr
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from qdrant_client import QdrantClient
 
+# --- GLOBAL MEMORY (Singleton Pattern) ---
+# This variable persists in RAM as long as the application runs.
+_GLOBAL_EMBED_MODEL = None
+
 class FiqhSearchInput(BaseModel):
-    query: str = Field(..., description="The search keyword or question. Since the DB is Turkish, converting queries to Turkish yields better results.")
+    query: str = Field(..., description="The search keyword or question.")
 
 class FiqhSearchTool(BaseTool):
     name: str = "Fiqh_DB_Search_Tool"
-    description: str = (
-        "Use this tool to search for Islamic jurisprudence (Fiqh), verses, hadiths, "
-        "and fatwas in the local vector database. The database content is mainly in Turkish."
-    )
+    description: str = "Search for Islamic jurisprudence (Fiqh) texts."
     args_schema: Type[BaseModel] = FiqhSearchInput
+    
+    # Private attribute to hold the model instance within the class
+    _embed_model: Optional[Any] = PrivateAttr(default=None)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        global _GLOBAL_EMBED_MODEL
+        
+        # Load model ONLY if it's not already in global memory
+        if _GLOBAL_EMBED_MODEL is None:
+            print("⚙️ Loading Embedding Model (This should appear ONLY ONCE)...")
+            _GLOBAL_EMBED_MODEL = HuggingFaceEmbedding(
+                model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+            )
+            print("✅ Model Loaded into Memory!")
+        else:
+            print("⚡ Model Ready (Using Cached Version)...")
+            
+        # Assign the global model to this instance
+        self._embed_model = _GLOBAL_EMBED_MODEL
 
     def _run(self, query: str) -> str:
         try:
-            embed_model = HuggingFaceEmbedding(
-                model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-            )
-            query_vector = embed_model.get_query_embedding(query)
-
+            # Generate embedding using the cached model
+            query_vector = self._embed_model.get_query_embedding(query)
+            
             client = QdrantClient(url="http://localhost:6333")
-
+            
             search_results = client.query_points(
                 collection_name="fiqh_knowladge_base",
                 query=query_vector,
-                limit=3,
+                limit=1, # Strict limit to 1 for token efficiency with Groq
                 with_payload=True,
             )
 
             all_results = []
-            
             if search_results.points:
                 for point in search_results.points:
                     if point.payload:
-
-                        file_name = point.payload.get("file_name", "Unknown Source")
-                        content = "No content found."
+                        file_name = point.payload.get("file_name", "Unknown")
+                        content = "No content."
                         node_content_str = point.payload.get("_node_content")
                         
+                        # Safe JSON parsing for content
                         if node_content_str:
                             try:
                                 node_data = json.loads(node_content_str)
-                                content = node_data.get("text", "No content found inside node.")
+                                content = node_data.get("text", "")
                             except:
-                                content = str(node_content_str)[:200] + "..."
+                                content = point.payload.get("text", "")
                         else:
-                            content = point.payload.get("text", "No content found.")
-
+                            content = point.payload.get("text", "")
                         
+                        # Truncate content to save tokens (Max 1500 chars)
+                        if len(content) > 1500:
+                            content = content[:1500] + "... (truncated)"
+
                         score = point.score
-                        all_results.append(f"Source: {file_name} (Confidence: {score:.2f}):\n{content}\n")
+                        all_results.append(f"Source: {file_name} (Conf: {score:.2f}):\n{content}\n")
             else:
-                return "Could not find any data related to this topic in the database!"
+                return "No relevant data found."
             
             return "\n".join(all_results)
         
         except Exception as e:
-            return f"Database Error: {str(e)}"
+            return f"Error: {str(e)}"

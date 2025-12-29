@@ -17,8 +17,8 @@ class FiqhAgenticRagApi():
     
     def __init__(self):
         self.gemini_llm = LLM(
-            model=os.getenv("MODEL"),
-            api_key=os.getenv("GEMINI_API_KEY"),
+            model=os.getenv("GROQ_MODEL"),
+            api_key=os.getenv("GROQ_API_KEY"),
             temperature=0.3,
         )
 
@@ -28,7 +28,8 @@ class FiqhAgenticRagApi():
             config=self.agents_config['db_researcher'], # type: ignore[index]
             tools=[FiqhSearchTool()],
             verbose=True,
-            llm=self.gemini_llm
+            llm=self.gemini_llm,
+            max_iter=1,
         )
 
     @agent
@@ -36,7 +37,7 @@ class FiqhAgenticRagApi():
         return Agent(
             config=self.agents_config['fiqh_writer'], # type: ignore[index]
             verbose=True,
-            llm=self.gemini_llm
+            llm=self.gemini_llm,
         )
         
     @agent
@@ -44,7 +45,7 @@ class FiqhAgenticRagApi():
         return Agent(
             config=self.agents_config['content_reviewer'], # type: ignore[index]
             verbose=True,
-            llm=self.gemini_llm
+            llm=self.gemini_llm,
         )    
 
 
@@ -79,7 +80,7 @@ class FiqhAgenticRagApi():
 if __name__ == "__main__":
     print("Fiqh Agentic RAG Crew starting...")
     
-    inputs = {'question': 'Ben seferi iken bir namazı kılamadım kendi vatanıma döndüğümde seferi iken kılmam gereken rekkat sayısında mı kılarım yoksa o an kılmam gerekn rekat sayısında mı'}
+    inputs = {'question': 'Kerahat vakitleri her mezhep için aynı mıdır'}
 
     fiqh_crew = FiqhAgenticRagApi()
     
