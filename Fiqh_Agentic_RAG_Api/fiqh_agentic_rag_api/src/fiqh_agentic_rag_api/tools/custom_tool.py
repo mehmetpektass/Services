@@ -47,13 +47,17 @@ class FiqhSearchTool(BaseTool):
             search_results = client.query_points(
                 collection_name="fiqh_knowladge_base",
                 query=query_vector,
-                limit=3, # Strict limit to 1 for token efficiency with Groq
+                limit=5, # Strict limit to 1 for token efficiency with Groq
+                score_threshold=0.5,
                 with_payload=True,
             )
 
             all_results = []
-            if search_results.points:
-                for point in search_results.points:
+            
+            high_quality_points = [p for p in search_results.points if p.score >= 0.5][:3]
+            
+            if high_quality_points.points:
+                for point in high_quality_points.points:
                     if point.payload:
                         file_name = point.payload.get("file_name", "Unknown")
                         content = "No content."
@@ -70,13 +74,13 @@ class FiqhSearchTool(BaseTool):
                             content = point.payload.get("text", "")
                         
                         # Truncate content to save tokens (Max 1500 chars)
-                        if len(content) > 1500:
-                            content = content[:1500] + "... (truncated)"
+                        if len(content) > 500:
+                            content = content[:500] + "... (truncated)"
 
                         score = point.score
                         all_results.append(f"Source: {file_name} (Conf: {score:.2f}):\n{content}\n")
             else:
-                return "No relevant data found."
+                return "No relevant data found. Please try rephrasing your question.(İlgili veri bulunamadı. Lütfen sorunuzu yeniden ifade etmeyi deneyin.)"
             
             return "\n".join(all_results)
         

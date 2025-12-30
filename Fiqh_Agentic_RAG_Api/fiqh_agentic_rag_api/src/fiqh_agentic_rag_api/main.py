@@ -1,4 +1,3 @@
-import os
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -30,8 +29,8 @@ def ask_question(request: QueryRequest):
         print(f"📩 Received Question ({request.user_id}): {request.question}")
         
         inputs = {
-            'chat_history': str(history_context) if history_context else "New Conversation",
-            'question': str(request.question).strip(),
+            'chat_history': history_context if history_context else "New Conversation",
+            'question': request.question.strip(),
         }
         
         result = FiqhAgenticRagApi().crew().kickoff(inputs=inputs)

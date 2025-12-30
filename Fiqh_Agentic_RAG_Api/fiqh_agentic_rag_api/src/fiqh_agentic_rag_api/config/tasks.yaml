@@ -22,6 +22,9 @@ search_task:
 
 writing_task:
   description: >
+    Chat History: "{chat_history}"
+    Current Question: "{question}"
+    
     Based on the retrieved sources, answer the question: "{question}".
     
     *** CRITICAL FOCUS RULE ***
@@ -83,42 +86,57 @@ writing_task:
 
 review_task:
   description: >
+    Chat History: "{chat_history}"
+    Current Question: "{question}"
+    
     Evaluate the prepared answer according to the following criteria and correct if necessary:
     
     **PRIORITY CHECKLIST:**
     
-    **1. FOCUS & RELEVANCE (MOST IMPORTANT):**
+    **0. CRITICAL FACT-CHECK (NEW - MOST IMPORTANT):**
+       - Does the answer contain ANY factual errors about madhab rulings?
+       - Are conditions and prerequisites correctly stated?
+       - Example checks:
+         * If about mesh: Did it mention "abdestli iken giymek" şartı?
+         * If about ablution: Are invalidators correctly stated?
+         * If about prayer: Are pillars vs conditions distinguished?
+       - **ACTION:** If ANY factual error exists, REWRITE the answer based on sources.
+    
+    **1. FOCUS & RELEVANCE:**
        - Does the answer contain ANY information not directly related to the question?
        - Are there mentions of "sehiv secdesi", "kaza", or other unrelated fiqh concepts?
        - If the question is about ablution, is there ANY mention of prayer, fasting, etc.?
        - **ACTION:** Cut out ALL irrelevant content immediately. This is non-negotiable.
     
-    **2. MADHAB COMPLETENESS:**
+    **2. SOURCE VERIFICATION:**
+       - Does EVERY claim in the answer come from the retrieved sources?
+       - If sources say "X", did the writer accidentally say "NOT X"?
+       - Are madhab attributions correct?
+       - **ACTION:** If anything contradicts sources, CORRECT it immediately.
+    
+    **3. MADHAB COMPLETENESS:**
        - If madhabs differ on this ruling, are the differences mentioned?
        - Is only one madhab's view given when others differ significantly?
        - **ACTION:** Add missing madhab perspectives if they exist and are significantly different.
     
-    **3. FIQH ACCURACY:**
+    **4. FIQH ACCURACY:**
        - Is the ruling correct? (invalidates/doesn't invalidate, permissible/impermissible might be confused)
        - Is the user's situation correctly understood?
        - Are important conditions or exceptions properly explained?
     
-    **4. LENGTH APPROPRIATENESS:**
+    **5. LENGTH APPROPRIATENESS:**
        - Is it around 100 words? (50-60 for simple, up to 150 for complex is acceptable)
        - If unnecessarily long with repetition, shorten it.
        - If important information is missing, suggest adding it.
     
-    **5. LANGUAGE QUALITY:**
+    **6. LANGUAGE QUALITY:**
        - Is the Turkish fluent and error-free?
        - Are there unnecessary repetitions?
        - Are there robotic expressions?
        - Is the flow logical and easy to follow?
     
-    **6. SOURCE ALIGNMENT:**
-       - Does the answer contradict the retrieved sources?
-       - Is there fabricated information?
-    
     **CORRECTION PROTOCOL:**
+    - If factual error exists → REWRITE completely based on sources
     - If irrelevant content exists → Remove it completely
     - If serious error exists → Correct it
     - If madhab differences missing → Add them
@@ -126,7 +144,7 @@ review_task:
     - If answer is good → Pass through as is
     
   expected_output: >
-    Reviewed, corrected, strictly focused, appropriately detailed, and high-quality final answer 
-    with zero irrelevant content.
+    Reviewed, fact-checked, corrected, strictly focused, appropriately detailed, and high-quality final answer 
+    with zero factual errors and zero irrelevant content.
     
   agent: content_reviewer

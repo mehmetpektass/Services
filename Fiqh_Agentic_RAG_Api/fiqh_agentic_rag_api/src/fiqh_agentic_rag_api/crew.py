@@ -27,7 +27,6 @@ class FiqhAgenticRagApi():
         return Agent(
             config=self.agents_config['db_researcher'], # type: ignore[index]
             tools=[FiqhSearchTool()],
-            verbose=True,
             llm=self.gemini_llm,
             max_iter=1,
         )
@@ -36,7 +35,6 @@ class FiqhAgenticRagApi():
     def fiqh_writer(self) -> Agent:
         return Agent(
             config=self.agents_config['fiqh_writer'], # type: ignore[index]
-            verbose=True,
             llm=self.gemini_llm,
         )
         
@@ -44,7 +42,6 @@ class FiqhAgenticRagApi():
     def content_reviewer(self) -> Agent:
         return Agent(
             config=self.agents_config['content_reviewer'], # type: ignore[index]
-            verbose=True,
             llm=self.gemini_llm,
         )    
 

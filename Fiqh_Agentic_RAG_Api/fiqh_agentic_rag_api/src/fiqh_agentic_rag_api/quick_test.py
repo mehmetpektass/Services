@@ -33,6 +33,3 @@ def quick_test():
         print(f"\n❌ Error: {e}")
         import traceback
         traceback.print_exc()
-
-if __name__ == "__main__":
-    quick_test()
