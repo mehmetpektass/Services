@@ -1,68 +1,55 @@
-#!/usr/bin/env python
-import sys
-import warnings
+import os
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from dotenv import load_dotenv
+from crew import FiqhAgenticRagApi
 
-from datetime import datetime
+load_dotenv()
 
-from fiqh_agentic_rag_api.crew import FiqhAgenticRagApi
+app = FastAPI(
+    title="Fiqh Agentic RAG API",
+    version="1.0.0",
+)
 
-warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
+chat_sessions = {}
 
-# This main file is intended to be a way for you to run your
-# crew locally, so refrain from adding unnecessary logic into this file.
-# Replace with inputs you want to test with, it will automatically
-# interpolate any tasks and agents information
-
-def run():
-    """
-    Run the crew.
-    """
-    inputs = {
-        'topic': 'AI LLMs',
-        'current_year': str(datetime.now().year)
-    }
+class QueryRequest(BaseModel):
+    user_id: str = "default_user"
+    question: str
     
-    try:
-        FiqhAgenticRagApi().crew().kickoff(inputs=inputs)
-    except Exception as e:
-        raise Exception(f"An error occurred while running the crew: {e}")
-
-
-def train():
-    """
-    Train the crew for a given number of iterations.
-    """
-    inputs = {
-        "topic": "AI LLMs",
-        'current_year': str(datetime.now().year)
-    }
-    try:
-        FiqhAgenticRagApi().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
-
-    except Exception as e:
-        raise Exception(f"An error occurred while training the crew: {e}")
-
-def replay():
-    """
-    Replay the crew execution from a specific task.
-    """
-    try:
-        FiqhAgenticRagApi().crew().replay(task_id=sys.argv[1])
-
-    except Exception as e:
-        raise Exception(f"An error occurred while replaying the crew: {e}")
-
-def test():
-    """
-    Test the crew execution and returns the results.
-    """
-    inputs = {
-        "topic": "AI LLMs",
-        "current_year": str(datetime.now().year)
-    }
+class QueryResponse(BaseModel):
+    answer: str
     
+@app.post("/chat", response_model=QueryResponse)
+def ask_question(request: QueryRequest):
     try:
-        FiqhAgenticRagApi().crew().test(n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=inputs)
-
+        current_user_history = chat_sessions.get(request.user_id, "")
+        history_context = "\n".join([f"{msg["role"]}: {msg["content"]}" for msg in current_user_history[-2:]])
+        
+        print(f"📩 Received Question ({request.user_id}): {request.question}")
+        
+        inputs = {
+            'chat_history': str(history_context) if history_context else "New Conversation",
+            'question': str(request.question).strip(),
+        }
+        
+        result = FiqhAgenticRagApi().crew().kickoff(inputs=inputs)
+        final_answer = str(result)
+        
+        if request.user_id not in chat_sessions:
+            chat_sessions[request.user_id] = []
+            
+        chat_sessions[request.user_id].append({"role": "User", "content": request.question})
+        chat_sessions[request.user_id].append({"role": "AI", "content": final_answer})
+        
+        return QueryResponse(answer=final_answer)
+    
     except Exception as e:
-        raise Exception(f"An error occurred while testing the crew: {e}")
+        print(f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    

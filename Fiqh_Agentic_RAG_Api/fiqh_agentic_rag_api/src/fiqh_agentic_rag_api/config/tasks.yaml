@@ -1,43 +1,132 @@
 search_task:
   description: >
+    Chat History: "{chat_history}"
     Current Question: "{question}"
     
-    1. Analyze the question to identify key Islamic terms (e.g., Seferi, Kaza, Mukim).
-    2. Search the database specifically for rulings regarding that topic.
-    3. Look for phrases like "iki rekat olarak kararlaşmıştır", "kaza edilir", "seferi namazı".
-    4. Retrieve the raw Turkish text exactly as it is in the database.
+    TASK:
+    1. Identify the CORE TOPIC of the question (e.g., ablution, fasting, prayer, halal-haram).
+    2. Retrieve sources ONLY about this core topic. Do NOT retrieve unrelated topics.
+    3. Find source texts containing rulings specific to the situations mentioned in the question.
+    4. Retrieve relevant verses, hadiths, madhab opinions, or fiqh explanations.
+    5. If a madhab is specified, prioritize that school, but also include other madhabs if they differ.
+    6. Include both the main ruling AND any important conditions, exceptions, or madhab differences.
+    
+    **CRITICAL RULE:** If the question is about ablution, retrieve ONLY ablution sources. 
+    If it's about fasting, retrieve ONLY fasting sources. Do NOT mix topics.
+    
   expected_output: >
-    A list of relevant raw text evidences from the Fiqh database.
+    Raw text excerpts STRICTLY related to the question's core topic, with source references.
+    Format: For each source [Source Name]: "Text content with conditions and context"
+    
   agent: db_researcher
 
 writing_task:
   description: >
-    Using the retrieved texts, draft a final answer to the question: "{question}".
+    Based on the retrieved sources, answer the question: "{question}".
     
-    *** CRITICAL LANGUAGE RULE (Kritik Dil Kuralı) ***
-    1. **DETECT LANGUAGE:** Look at the user's question ("{question}").
-    2. **MATCH LANGUAGE:** Your answer MUST be in the SAME language.
-       - If Question is TURKISH -> Answer MUST be in TURKISH.
-       - If Question is ENGLISH -> Answer in ENGLISH.
-       - NEVER translate a Turkish question's answer into English.
+    *** CRITICAL FOCUS RULE ***
+    Answer ONLY what is asked. Do NOT add unrelated fiqh topics:
+    - If asked about ablution → Talk ONLY about ablution
+    - If asked about fasting → Talk ONLY about fasting
+    - If asked about alcohol → Talk ONLY about alcohol rulings
+    DO NOT mention "sehiv secdesi", "kaza", or other concepts unless directly asked.
     
-    *** CONTENT INSTRUCTIONS ***
-    - If the text says a missed traveler prayer is "fixed as two rakats" (kararlaşmıştır), state clearly that this rule applies even after returning home.
-    - Do NOT say "The provided text does not contain info" if there is a general ruling available. Use logic.
-    - Keep the tone conversational, helpful, and concise (under 150 words).
+    *** ANSWER CONSTRUCTION PROTOCOL ***
+    
+    1. **IDENTIFY THE CORE TOPIC:**
+       - What is the main subject? (ablution, prayer, fasting, halal-haram, etc.)
+       - Stay focused on THIS topic only.
+    
+    2. **SITUATION IDENTIFICATION:**
+       - What is the user's specific situation within this topic?
+       - Are there conditions or exceptions?
+    
+    3. **SOURCE MATCHING:**
+       - Which ruling in the retrieved texts matches THIS situation?
+       - Be CAREFUL not to confuse it with other situations.
+    
+    4. **RULING DETERMINATION:**
+       - Carefully read expressions like "permissible/impermissible", "invalidates/does not invalidate", "obligatory/recommended/supererogatory".
+       - Don't miss negative suffixes (e.g., "does not invalidate ablution" → means ablution remains valid).
+    
+    5. **MANDATORY MADHAB CHECK:**
+       - Do different madhabs have different rulings on this?
+       - If YES, you MUST mention the main differences (at minimum Hanafi vs Shafi'i)
+       - Don't give only one madhab's view if others significantly differ.
+    
+    6. **CONDITIONS & EXCEPTIONS:**
+       - Are there important conditions for this ruling?
+       - Are there exceptions or special cases the user should know?
+    
+    *** WRITING RULES ***
+    - LENGTH: Aim for around 100 words, but be flexible:
+      * Simple questions: 50-60 words is fine
+      * Complex questions with conditions/exceptions: up to 150 words
+      * If the ruling has important nuances, don't sacrifice clarity for brevity
+    - STYLE: Direct and clear. DON'T use introductory phrases like "According to sources...", "As stated..."
+    - LANGUAGE: Simple, understandable Turkish. Explain Arabic terms in parentheses if necessary.
+    - FORMAT: Write only the final answer. DON'T use labels like "Thought:", "Here's the answer:"
+    - STRUCTURE: Start with the direct answer, then add conditions/exceptions if needed, then madhab differences if relevant.
+    - **NO TANGENTS:** Stay laser-focused on the question. Don't discuss related but different topics.
+    
+    EXAMPLE GOOD ANSWER (Simple - Ablution topic):
+    "Abdest alırken konuşmak abdesti bozmaz. Konuşma abdestin farzlarından veya sünnetlerinden biri değildir, bu yüzden abdesti geçersiz kılmaz. Ancak abdest sırasında gereksiz konuşmaktan kaçınmak daha efdâldir (daha sevap). Dört mezhep bu konuda hemfikirdir."
+    
+    EXAMPLE GOOD ANSWER (Complex - Fasting topic):
+    "Hamile kadın eğer orucun kendisine veya bebeğine zarar vereceğinden endişe ediyorsa oruç tutmayabilir. Bu durumda tutmadığı günleri daha sonra kaza etmesi gerekir. Ancak sadece bebeğe zarar endişesi varsa ve anne sağlıklıysa, Hanefî mezhebi kazaya ek olarak her gün için bir fakiri doyurma (fidye) gerektiğini söyler. Şafiî ve Hanbelî mezheplerine göre ise sadece kaza yeterlidir, fidye gerekmez. Endişe durumu hekim kontrolü ile belirlenmeli ve mezhebin görüşüne göre amel edilmelidir."
+    
   expected_output: >
-    A final answer in the SAME LANGUAGE as the user's question (likely Turkish).
+    Approximately 100-word (flexible based on complexity), source-based Turkish answer STRICTLY focused 
+    on the question topic, with necessary conditions, exceptions, and madhab differences.
+    
   agent: fiqh_writer
 
 review_task:
   description: >
-    Review the draft answer provided by the writer.
+    Evaluate the prepared answer according to the following criteria and correct if necessary:
     
-    CHECKLIST:
-    1. **Language Check:** Is the answer in the SAME language as the question "{question}"?
-       - If the question is Turkish but the answer is English, TRANSLATE IT TO TURKISH IMMEDIATELY.
-    2. **Accuracy Check:** Does the answer correctly reflect the fiqh ruling found in the search?
-    3. **Clarity:** Is it polite and short?
+    **PRIORITY CHECKLIST:**
+    
+    **1. FOCUS & RELEVANCE (MOST IMPORTANT):**
+       - Does the answer contain ANY information not directly related to the question?
+       - Are there mentions of "sehiv secdesi", "kaza", or other unrelated fiqh concepts?
+       - If the question is about ablution, is there ANY mention of prayer, fasting, etc.?
+       - **ACTION:** Cut out ALL irrelevant content immediately. This is non-negotiable.
+    
+    **2. MADHAB COMPLETENESS:**
+       - If madhabs differ on this ruling, are the differences mentioned?
+       - Is only one madhab's view given when others differ significantly?
+       - **ACTION:** Add missing madhab perspectives if they exist and are significantly different.
+    
+    **3. FIQH ACCURACY:**
+       - Is the ruling correct? (invalidates/doesn't invalidate, permissible/impermissible might be confused)
+       - Is the user's situation correctly understood?
+       - Are important conditions or exceptions properly explained?
+    
+    **4. LENGTH APPROPRIATENESS:**
+       - Is it around 100 words? (50-60 for simple, up to 150 for complex is acceptable)
+       - If unnecessarily long with repetition, shorten it.
+       - If important information is missing, suggest adding it.
+    
+    **5. LANGUAGE QUALITY:**
+       - Is the Turkish fluent and error-free?
+       - Are there unnecessary repetitions?
+       - Are there robotic expressions?
+       - Is the flow logical and easy to follow?
+    
+    **6. SOURCE ALIGNMENT:**
+       - Does the answer contradict the retrieved sources?
+       - Is there fabricated information?
+    
+    **CORRECTION PROTOCOL:**
+    - If irrelevant content exists → Remove it completely
+    - If serious error exists → Correct it
+    - If madhab differences missing → Add them
+    - If minor errors exist → Make light corrections
+    - If answer is good → Pass through as is
+    
   expected_output: >
-    Final polished response in the correct language.
+    Reviewed, corrected, strictly focused, appropriately detailed, and high-quality final answer 
+    with zero irrelevant content.
+    
   agent: content_reviewer

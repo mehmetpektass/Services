@@ -47,7 +47,7 @@ class FiqhSearchTool(BaseTool):
             search_results = client.query_points(
                 collection_name="fiqh_knowladge_base",
                 query=query_vector,
-                limit=1, # Strict limit to 1 for token efficiency with Groq
+                limit=3, # Strict limit to 1 for token efficiency with Groq
                 with_payload=True,
             )
 
