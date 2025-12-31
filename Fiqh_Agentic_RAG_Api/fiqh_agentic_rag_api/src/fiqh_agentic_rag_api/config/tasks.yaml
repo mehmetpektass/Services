@@ -3,20 +3,11 @@ search_task:
     Chat History: "{chat_history}"
     Current Question: "{question}"
     
-    TASK:
-    1. Identify the CORE TOPIC of the question (e.g., ablution, fasting, prayer, halal-haram).
-    2. Retrieve sources ONLY about this core topic. Do NOT retrieve unrelated topics.
-    3. Find source texts containing rulings specific to the situations mentioned in the question.
-    4. Retrieve relevant verses, hadiths, madhab opinions, or fiqh explanations.
-    5. If a madhab is specified, prioritize that school, but also include other madhabs if they differ.
-    6. Include both the main ruling AND any important conditions, exceptions, or madhab differences.
-    
-    **CRITICAL RULE:** If the question is about ablution, retrieve ONLY ablution sources. 
-    If it's about fasting, retrieve ONLY fasting sources. Do NOT mix topics.
+    Search for Islamic sources related to this question.
+    If NO relevant sources exist, return: "❌ KAYNAK BULUNAMADI"
     
   expected_output: >
-    Raw text excerpts STRICTLY related to the question's core topic, with source references.
-    Format: For each source [Source Name]: "Text content with conditions and context"
+    Either: (a) Source texts, OR (b) "❌ KAYNAK BULUNAMADI"
     
   agent: db_researcher
 
@@ -25,126 +16,41 @@ writing_task:
     Chat History: "{chat_history}"
     Current Question: "{question}"
     
-    Based on the retrieved sources, answer the question: "{question}".
+    **CRITICAL INSTRUCTION:**
+    IF the researcher returned "❌ KAYNAK BULUNAMADI" or "No sources found":
+    → Your answer MUST be: "Bu konuda kaynaklarda yeterli bilgi bulunmamadı. Modern konular veya çok spesifik durumlar için yerel bir İslam alimi veya güvenilir fetva hizmeti ile görüşmeniz önerilir."
+    → DO NOT use your training knowledge
+    → DO NOT fabricate any ruling
     
-    *** CRITICAL FOCUS RULE ***
-    Answer ONLY what is asked. Do NOT add unrelated fiqh topics:
-    - If asked about ablution → Talk ONLY about ablution
-    - If asked about fasting → Talk ONLY about fasting
-    - If asked about alcohol → Talk ONLY about alcohol rulings
-    DO NOT mention "sehiv secdesi", "kaza", or other concepts unless directly asked.
-    
-    *** ANSWER CONSTRUCTION PROTOCOL ***
-    
-    1. **IDENTIFY THE CORE TOPIC:**
-       - What is the main subject? (ablution, prayer, fasting, halal-haram, etc.)
-       - Stay focused on THIS topic only.
-    
-    2. **SITUATION IDENTIFICATION:**
-       - What is the user's specific situation within this topic?
-       - Are there conditions or exceptions?
-    
-    3. **SOURCE MATCHING:**
-       - Which ruling in the retrieved texts matches THIS situation?
-       - Be CAREFUL not to confuse it with other situations.
-    
-    4. **RULING DETERMINATION:**
-       - Carefully read expressions like "permissible/impermissible", "invalidates/does not invalidate", "obligatory/recommended/supererogatory".
-       - Don't miss negative suffixes (e.g., "does not invalidate ablution" → means ablution remains valid).
-    
-    5. **MANDATORY MADHAB CHECK:**
-       - Do different madhabs have different rulings on this?
-       - If YES, you MUST mention the main differences (at minimum Hanafi vs Shafi'i)
-       - Don't give only one madhab's view if others significantly differ.
-    
-    6. **CONDITIONS & EXCEPTIONS:**
-       - Are there important conditions for this ruling?
-       - Are there exceptions or special cases the user should know?
-    
-    *** WRITING RULES ***
-    - LENGTH: Aim for around 100 words, but be flexible:
-      * Simple questions: 50-60 words is fine
-      * Complex questions with conditions/exceptions: up to 150 words
-      * If the ruling has important nuances, don't sacrifice clarity for brevity
-    - STYLE: Direct and clear. DON'T use introductory phrases like "According to sources...", "As stated..."
-    - LANGUAGE: Simple, understandable Turkish. Explain Arabic terms in parentheses if necessary.
-    - FORMAT: Write only the final answer. DON'T use labels like "Thought:", "Here's the answer:"
-    - STRUCTURE: Start with the direct answer, then add conditions/exceptions if needed, then madhab differences if relevant.
-    - **NO TANGENTS:** Stay laser-focused on the question. Don't discuss related but different topics.
-    
-    EXAMPLE GOOD ANSWER (Simple - Ablution topic):
-    "Abdest alırken konuşmak abdesti bozmaz. Konuşma abdestin farzlarından veya sünnetlerinden biri değildir, bu yüzden abdesti geçersiz kılmaz. Ancak abdest sırasında gereksiz konuşmaktan kaçınmak daha efdâldir (daha sevap). Dört mezhep bu konuda hemfikirdir."
-    
-    EXAMPLE GOOD ANSWER (Complex - Fasting topic):
-    "Hamile kadın eğer orucun kendisine veya bebeğine zarar vereceğinden endişe ediyorsa oruç tutmayabilir. Bu durumda tutmadığı günleri daha sonra kaza etmesi gerekir. Ancak sadece bebeğe zarar endişesi varsa ve anne sağlıklıysa, Hanefî mezhebi kazaya ek olarak her gün için bir fakiri doyurma (fidye) gerektiğini söyler. Şafiî ve Hanbelî mezheplerine göre ise sadece kaza yeterlidir, fidye gerekmez. Endişe durumu hekim kontrolü ile belirlenmeli ve mezhebin görüşüne göre amel edilmelidir."
+    IF sources were provided:
+    → Answer based ONLY on those sources (~100 words)
+    → Use natural Turkish paragraph form
+    → Do NOT create lists unless absolutely necessary
+    → Mention sources briefly at the end if relevant
     
   expected_output: >
-    Approximately 100-word (flexible based on complexity), source-based Turkish answer STRICTLY focused 
-    on the question topic, with necessary conditions, exceptions, and madhab differences.
+    Either: (a) Source-based paragraph answer, OR (b) "No information available" message
     
   agent: fiqh_writer
 
 review_task:
   description: >
-    Chat History: "{chat_history}"
-    Current Question: "{question}"
+    Validate the writer's answer for hallucination ONLY.
     
-    Evaluate the prepared answer according to the following criteria and correct if necessary:
+    **YOUR ONLY TASK:**
+    Check if answer contains fabricated madhabs, scholars, or councils NOT in sources.
     
-    **PRIORITY CHECKLIST:**
+    **IF NO HALLUCINATION DETECTED:**
+    → Return the writer's answer EXACTLY AS IS
+    → Do NOT modify, restructure, or add anything
+    → Do NOT add your own explanations
     
-    **0. CRITICAL FACT-CHECK (NEW - MOST IMPORTANT):**
-       - Does the answer contain ANY factual errors about madhab rulings?
-       - Are conditions and prerequisites correctly stated?
-       - Example checks:
-         * If about mesh: Did it mention "abdestli iken giymek" şartı?
-         * If about ablution: Are invalidators correctly stated?
-         * If about prayer: Are pillars vs conditions distinguished?
-       - **ACTION:** If ANY factual error exists, REWRITE the answer based on sources.
+    **IF HALLUCINATION DETECTED:**
+    → Return: "Bu konuda kaynaklarda yeterli bilgi bulunamadı."
     
-    **1. FOCUS & RELEVANCE:**
-       - Does the answer contain ANY information not directly related to the question?
-       - Are there mentions of "sehiv secdesi", "kaza", or other unrelated fiqh concepts?
-       - If the question is about ablution, is there ANY mention of prayer, fasting, etc.?
-       - **ACTION:** Cut out ALL irrelevant content immediately. This is non-negotiable.
-    
-    **2. SOURCE VERIFICATION:**
-       - Does EVERY claim in the answer come from the retrieved sources?
-       - If sources say "X", did the writer accidentally say "NOT X"?
-       - Are madhab attributions correct?
-       - **ACTION:** If anything contradicts sources, CORRECT it immediately.
-    
-    **3. MADHAB COMPLETENESS:**
-       - If madhabs differ on this ruling, are the differences mentioned?
-       - Is only one madhab's view given when others differ significantly?
-       - **ACTION:** Add missing madhab perspectives if they exist and are significantly different.
-    
-    **4. FIQH ACCURACY:**
-       - Is the ruling correct? (invalidates/doesn't invalidate, permissible/impermissible might be confused)
-       - Is the user's situation correctly understood?
-       - Are important conditions or exceptions properly explained?
-    
-    **5. LENGTH APPROPRIATENESS:**
-       - Is it around 100 words? (50-60 for simple, up to 150 for complex is acceptable)
-       - If unnecessarily long with repetition, shorten it.
-       - If important information is missing, suggest adding it.
-    
-    **6. LANGUAGE QUALITY:**
-       - Is the Turkish fluent and error-free?
-       - Are there unnecessary repetitions?
-       - Are there robotic expressions?
-       - Is the flow logical and easy to follow?
-    
-    **CORRECTION PROTOCOL:**
-    - If factual error exists → REWRITE completely based on sources
-    - If irrelevant content exists → Remove it completely
-    - If serious error exists → Correct it
-    - If madhab differences missing → Add them
-    - If minor errors exist → Make light corrections
-    - If answer is good → Pass through as is
+    **CRITICAL:** You are an approval gate, NOT an editor. Pass through good answers unchanged.
     
   expected_output: >
-    Reviewed, fact-checked, corrected, strictly focused, appropriately detailed, and high-quality final answer 
-    with zero factual errors and zero irrelevant content.
+    Writer's answer (unmodified if good) OR rejection message (if hallucination)
     
   agent: content_reviewer

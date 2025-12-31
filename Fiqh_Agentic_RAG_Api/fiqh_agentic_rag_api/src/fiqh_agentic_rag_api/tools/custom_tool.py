@@ -6,7 +6,6 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from qdrant_client import QdrantClient
 
 # --- GLOBAL MEMORY (Singleton Pattern) ---
-# This variable persists in RAM as long as the application runs.
 _GLOBAL_EMBED_MODEL = None
 
 class FiqhSearchInput(BaseModel):
@@ -28,7 +27,7 @@ class FiqhSearchTool(BaseTool):
         if _GLOBAL_EMBED_MODEL is None:
             print("⚙️ Loading Embedding Model (This should appear ONLY ONCE)...")
             _GLOBAL_EMBED_MODEL = HuggingFaceEmbedding(
-                model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+                model_name="intfloat/multilingual-e5-large"
             )
             print("✅ Model Loaded into Memory!")
         else:
@@ -40,14 +39,15 @@ class FiqhSearchTool(BaseTool):
     def _run(self, query: str) -> str:
         try:
             # Generate embedding using the cached model
-            query_vector = self._embed_model.get_query_embedding(query)
+            query_with_prefix = f"query: {query}"
+            query_vector = self._embed_model.get_query_embedding(query_with_prefix)
             
             client = QdrantClient(url="http://localhost:6333")
             
             search_results = client.query_points(
                 collection_name="fiqh_knowladge_base",
                 query=query_vector,
-                limit=5, # Strict limit to 1 for token efficiency with Groq
+                limit=5,
                 score_threshold=0.5,
                 with_payload=True,
             )
@@ -56,8 +56,8 @@ class FiqhSearchTool(BaseTool):
             
             high_quality_points = [p for p in search_results.points if p.score >= 0.5][:3]
             
-            if high_quality_points.points:
-                for point in high_quality_points.points:
+            if high_quality_points:
+                for point in high_quality_points:
                     if point.payload:
                         file_name = point.payload.get("file_name", "Unknown")
                         content = "No content."
